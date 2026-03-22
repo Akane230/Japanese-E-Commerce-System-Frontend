@@ -3,477 +3,206 @@ import { useCart } from "../../hooks/useCart";
 import { Icons } from "../common/Icons";
 import { Button } from "../common/Button";
 import { QuantityControl } from "../common/QuantityControl";
+import "../../styles/layout/CartDrawer.css";
 
 export function CartDrawer({ onNavigate }) {
   const { items, total, isOpen, setIsOpen, updateQuantity, removeItem } =
     useCart();
 
-  console.log("CartDrawer render - items:", items, "total:", total, "isOpen:", isOpen);
+  // console.log(
+  //   "CartDrawer render - items:",
+  //   items,
+  //   "total:",
+  //   total,
+  //   "isOpen:",
+  //   isOpen,
+  // );
   const shipping = total >= 80 ? 0 : 12.99;
-  const freeShippingProgress = Math.min((total / 80) * 100, 100);
   const [visible, setVisible] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
 
   useEffect(() => {
-    const updateVisibility = () => {
-      if (isOpen) {
-        requestAnimationFrame(() => {
-          setVisible(true);
-        });
-      } else {
+    if (isOpen) {
+      setTimeout(() => {
+        setIsClosing(false);
+        setVisible(true);
+      }, 0);
+      document.body.style.overflow = "hidden";
+    } else {
+      setTimeout(() => {
+        setIsClosing(true);
+      }, 0);
+      document.body.style.overflow = "";
+      const timer = setTimeout(() => {
         setVisible(false);
-      }
-    };
+        setIsClosing(false);
+      }, 250);
+      return () => clearTimeout(timer);
+    }
 
-    updateVisibility();
     return () => {
-      setVisible(false);
+      document.body.style.overflow = "";
     };
   }, [isOpen]);
 
-  if (!isOpen && !visible) return null;
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsOpen(false);
+    }, 200);
+  };
+
+  if (!isOpen && !visible && !isClosing) return null;
 
   return (
     <>
-      <style>{`
-        @keyframes drawerIn {
-          from { transform: translateX(100%); }
-          to { transform: translateX(0); }
-        }
-        @keyframes drawerOut {
-          from { transform: translateX(0); }
-          to { transform: translateX(100%); }
-        }
-        .cart-drawer-panel {
-          animation: drawerIn 0.3s cubic-bezier(0.32,0.72,0,1) forwards;
-        }
-        .cart-drawer-panel.closing {
-          animation: drawerOut 0.25s cubic-bezier(0.32,0,0.67,0) forwards;
-        }
-        .cart-item-row {
-          transition: background 0.15s;
-        }
-        .cart-item-row:hover {
-          background: #f8f4ef !important;
-        }
-      `}</style>
+      {/* Backdrop */}
+      <div
+        className={`cart-backdrop ${visible && !isClosing ? "cart-backdrop--visible" : ""}`}
+        onClick={handleClose}
+        aria-hidden="true"
+      />
 
-      <div style={{ position: "fixed", inset: 0, zIndex: 200 }}>
-        {/* Backdrop */}
-        <div
-          onClick={() => setIsOpen(false)}
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "rgba(26,16,8,0.5)",
-            backdropFilter: "blur(3px)",
-            opacity: visible ? 1 : 0,
-            transition: "opacity 0.3s ease",
-          }}
-        />
-
-        {/* Panel */}
-        <div
-          className={`cart-drawer-panel${!visible ? " closing" : ""}`}
-          style={{
-            position: "absolute",
-            right: 0,
-            top: 0,
-            bottom: 0,
-            width: "min(420px, 100vw)",
-            background: "#faf7f2",
-            display: "flex",
-            flexDirection: "column",
-            boxShadow: "-8px 0 40px rgba(26,16,8,0.18)",
-          }}
-        >
-          {/* Header */}
-          <div
-            style={{
-              padding: "20px 22px 18px",
-              borderBottom: "1.5px solid #ede5d8",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              background: "white",
-            }}
-          >
-            <div>
-              <h2
-                style={{
-                  fontFamily: "'Noto Serif JP', serif",
-                  fontSize: 18,
-                  fontWeight: 700,
-                  margin: 0,
-                  color: "#1a1008",
-                }}
-              >
-                Your Cart
-              </h2>
-              <div style={{ fontSize: 12, color: "#b8aa98", marginTop: 2 }}>
+      {/* Panel */}
+      <div
+        className={`cart-panel ${visible && !isClosing ? "cart-panel--visible" : ""}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Shopping cart"
+      >
+        {/* Header */}
+        <div className="cart-header">
+          <div className="cart-header__content">
+            <h2 className="cart-header__title">
+              Shopping Cart
+              <span className="cart-header__subtitle">
                 {items.length === 0
-                  ? "Nothing here yet"
+                  ? "Empty"
                   : `${items.length} item${items.length !== 1 ? "s" : ""}`}
-              </div>
-            </div>
+              </span>
+            </h2>
             <button
-              onClick={() => setIsOpen(false)}
-              style={{
-                width: 32,
-                height: 32,
-                background: "#f0ebe0",
-                border: "none",
-                borderRadius: 8,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#8c7e6e",
-                transition: "background 0.15s",
-              }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.background = "#e5ddd0")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.background = "#f0ebe0")
-              }
+              onClick={handleClose}
+              className="cart-header__close"
+              aria-label="Close cart"
             >
-              <Icons.X />
+              <Icons.X size={18} />
             </button>
           </div>
+        </div>
 
-          {/* Free shipping progress */}
-          {items.length > 0 && (
-            <div
-              style={{
-                padding: "12px 22px",
-                background: "#fdf9f4",
-                borderBottom: "1px solid #ede5d8",
-              }}
-            >
-              {shipping === 0 ? (
-                <div
-                  style={{
-                    fontSize: 12,
-                    color: "#2d6a4f",
-                    fontWeight: 600,
-                    display: "flex",
-                    gap: 6,
-                    alignItems: "center",
-                  }}
-                >
-                  <span>🎉</span> You've unlocked free shipping!
-                </div>
-              ) : (
-                <div>
-                  <div
-                    style={{ fontSize: 12, color: "#8c7e6e", marginBottom: 6 }}
-                  >
-                    Add{" "}
-                    <strong style={{ color: "#c9933a" }}>
-                      ${(80 - total).toFixed(2)}
-                    </strong>{" "}
-                    more for free shipping
-                  </div>
-                  <div
-                    style={{
-                      height: 4,
-                      background: "#ede5d8",
-                      borderRadius: 4,
-                      overflow: "hidden",
-                    }}
-                  >
-                    <div
-                      style={{
-                        height: "100%",
-                        width: `${freeShippingProgress}%`,
-                        background: "linear-gradient(90deg, #e8637a, #c9933a)",
-                        borderRadius: 4,
-                        transition: "width 0.4s ease",
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
+        {/* Items */}
+        <div className="cart-items">
+          {items.length === 0 ? (
+            <div className="cart-empty">
+              <div className="cart-empty__icon">🛒</div>
+              <h3 className="cart-empty__title">Your cart is empty</h3>
+              <p className="cart-empty__message">
+                Discover authentic Japanese goods worth adding
+              </p>
+              <button
+                onClick={() => {
+                  handleClose();
+                  onNavigate("products");
+                }}
+                className="btn btn--primary"
+              >
+                Browse Products
+                <span className="btn__icon" aria-hidden="true">
+                  →
+                </span>
+              </button>
             </div>
-          )}
-
-          {/* Items */}
-          <div style={{ flex: 1, overflowY: "auto", padding: "16px 18px" }}>
-            {items.length === 0 ? (
+          ) : (
+            items.map((item, index) => (
               <div
-                style={{
-                  textAlign: "center",
-                  paddingTop: 60,
-                  color: "#8c7e6e",
-                }}
+                key={item.product_id || item.id || `item-${index}`}
+                className="cart-item"
               >
-                <div style={{ fontSize: 52, marginBottom: 14 }}>🛒</div>
-                <div
-                  style={{
-                    fontWeight: 700,
-                    fontSize: 16,
-                    marginBottom: 6,
-                    color: "#3d2415",
-                  }}
-                >
-                  Your cart is empty
+                <div className="cart-item__media">
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="cart-item__image"
+                    loading="lazy"
+                  />
+                  <span className="cart-item__quantity-badge">{item.qty}</span>
                 </div>
-                <div
-                  style={{ fontSize: 13, marginBottom: 22, lineHeight: 1.6 }}
-                >
-                  Discover authentic Japanese
-                  <br />
-                  goods worth adding
-                </div>
-                <button
-                  onClick={() => {
-                    setIsOpen(false);
-                    onNavigate("products");
-                  }}
-                  style={{
-                    background: "#1a1008",
-                    color: "#faf7f2",
-                    border: "none",
-                    borderRadius: 10,
-                    padding: "10px 22px",
-                    fontSize: 13,
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    transition: "background 0.15s",
-                  }}
-                >
-                  Browse Products →
-                </button>
-              </div>
-            ) : (
-              items.map((item, index) => (
-                <div
-                  key={item.product_id || item.id || `item-${index}`}
-                  className="cart-item-row"
-                  style={{
-                    display: "flex",
-                    gap: 12,
-                    marginBottom: 10,
-                    padding: "12px 14px",
-                    background: "white",
-                    borderRadius: 14,
-                    border: "1.5px solid #ede5d8",
-                  }}
-                >
-                  <div style={{ position: "relative", flexShrink: 0 }}>
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      style={{
-                        width: 64,
-                        height: 64,
-                        borderRadius: 10,
-                        objectFit: "cover",
-                        display: "block",
-                      }}
+
+                <div className="cart-item__content">
+                  <div className="cart-item__header">
+                    <h4 className="cart-item__title">{item.name}</h4>
+                    <button
+                      onClick={() => removeItem(item.id)}
+                      className="cart-item__remove"
+                      aria-label="Remove item"
+                    >
+                      <Icons.X size={12} />
+                    </button>
+                  </div>
+
+                  <div className="cart-item__price">
+                    ${(item.salePrice || item.price || 0).toFixed(2)} each
+                  </div>
+
+                  <div className="cart-item__footer">
+                    <QuantityControl
+                      qty={item.qty}
+                      setQty={(q) => updateQuantity(item.id, q)}
                     />
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: -5,
-                        right: -5,
-                        width: 18,
-                        height: 18,
-                        borderRadius: "50%",
-                        background: "#e8637a",
-                        color: "white",
-                        fontSize: 9,
-                        fontWeight: 800,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      {item.qty}
-                    </div>
+                    <span className="cart-item__total">
+                      $
+                      {((item.salePrice || item.price || 0) * item.qty).toFixed(
+                        2,
+                      )}
+                    </span>
                   </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontWeight: 700,
-                        fontSize: 12.5,
-                        color: "#1a1008",
-                        marginBottom: 2,
-                        lineHeight: 1.3,
-                      }}
-                    >
-                      {item.name}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 11,
-                        color: "#b8aa98",
-                        marginBottom: 6,
-                      }}
-                    >
-                      ${(item.salePrice || item.price || 0).toFixed(2)} each
-                    </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <QuantityControl
-                        qty={item.qty}
-                        setQty={(q) => updateQuantity(item.id, q)}
-                      />
-                      <strong style={{ color: "#e8637a", fontSize: 14 }}>
-                        $
-                        {(
-                          (item.salePrice || item.price || 0) * item.qty
-                        ).toFixed(2)}
-                      </strong>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => removeItem(item.id)}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      color: "#c9b8a4",
-                      padding: "2px",
-                      alignSelf: "flex-start",
-                      borderRadius: 6,
-                      transition: "color 0.15s",
-                    }}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.color = "#e8637a")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.color = "#c9b8a4")
-                    }
-                  >
-                    <Icons.X size={14} />
-                  </button>
                 </div>
-              ))
-            )}
-          </div>
+              </div>
+            ))
+          )}
+        </div>
 
-          {/* Footer */}
-          {items.length > 0 && (
-            <div
-              style={{
-                padding: "16px 20px 22px",
-                borderTop: "1.5px solid #ede5d8",
-                background: "white",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: 6,
-                  fontSize: 13,
-                  color: "#8c7e6e",
-                }}
-              >
+        {/* Footer */}
+        {items.length > 0 && (
+          <div className="cart-footer">
+            <div className="cart-footer__summary">
+              <div className="summary-row">
                 <span>Subtotal</span>
-                <span style={{ color: "#1a1008", fontWeight: 600 }}>
-                  ${total.toFixed(2)}
-                </span>
+                <span className="summary-row__value">${total.toFixed(2)}</span>
               </div>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: 14,
-                  fontSize: 13,
-                  color: "#8c7e6e",
-                }}
-              >
-                <span>Shipping</span>
-                <span
-                  style={{
-                    color: shipping === 0 ? "#2d6a4f" : "#1a1008",
-                    fontWeight: 600,
-                  }}
-                >
-                  {shipping === 0 ? "🎁 FREE" : `$${shipping.toFixed(2)}`}
-                </span>
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "baseline",
-                  marginBottom: 16,
-                  paddingTop: 12,
-                  borderTop: "1px solid #ede5d8",
-                }}
-              >
-                <span style={{ fontWeight: 700, fontSize: 15 }}>Total</span>
-                <span
-                  style={{ fontWeight: 800, fontSize: 20, color: "#e8637a" }}
-                >
+              <div className="summary-row summary-row--total">
+                <span>Total</span>
+                <span className="summary-row__total">
                   ${(total + shipping).toFixed(2)}
                 </span>
               </div>
-
-              <button
-                onClick={() => {
-                  setIsOpen(false);
-                  onNavigate("checkout");
-                }}
-                style={{
-                  width: "100%",
-                  padding: "13px 0",
-                  background: "linear-gradient(135deg, #1a1008, #3d2415)",
-                  color: "#faf7f2",
-                  border: "none",
-                  borderRadius: 12,
-                  fontSize: 14,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  letterSpacing: "0.02em",
-                  transition: "opacity 0.2s, transform 0.15s",
-                  boxShadow: "0 4px 14px rgba(26,16,8,0.3)",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.opacity = "0.9";
-                  e.currentTarget.style.transform = "translateY(-1px)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.opacity = "1";
-                  e.currentTarget.style.transform = "none";
-                }}
-              >
-                Checkout — ${(total + shipping).toFixed(2)} →
-              </button>
-
-              <button
-                onClick={() => {
-                  setIsOpen(false);
-                  onNavigate("cart");
-                }}
-                style={{
-                  display: "block",
-                  width: "100%",
-                  marginTop: 10,
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  color: "#8c7e6e",
-                  fontSize: 12.5,
-                  textDecoration: "underline",
-                  transition: "color 0.15s",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "#3d2415")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "#8c7e6e")}
-              >
-                View full cart
-              </button>
             </div>
-          )}
-        </div>
+
+            <button
+              onClick={() => {
+                handleClose();
+                onNavigate("checkout");
+              }}
+              className="btn btn--primary btn--block btn--lg"
+            >
+              Checkout
+              <span className="btn__icon" aria-hidden="true">
+                →
+              </span>
+            </button>
+
+            <button
+              onClick={() => {
+                handleClose();
+                onNavigate("cart");
+              }}
+              className="cart-footer__view-cart"
+            >
+              View full cart
+            </button>
+          </div>
+        )}
       </div>
     </>
   );

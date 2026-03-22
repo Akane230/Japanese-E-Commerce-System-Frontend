@@ -1,27 +1,50 @@
-import React, { useState } from "react";
-import { authService } from "../../services/authService";
+import React, { useState, useEffect, useRef } from "react";
+import { useAddAddress, useUpdateAddress } from "../../hooks/useAuth";
 import { getApiErrorMessage } from "../../utils/api";
 import { Button } from "../common/Button";
 import { Icons } from "../auth/icons/icons";
 import "../styles/modal.css";
 
-export const AddAddressModal = ({ isOpen, onClose, onSuccess, showToast }) => {
-  const [formData, setFormData] = useState({
-    label: "Home",
-    recipient_name: "",
-    postal_code: "",
-    city: "",
-    street: "",
-    building: "",
-    country: "United States",
-    country_code: "US",
-    phone: "",
-    is_default: false,
-  });
+const EMPTY_FORM = {
+  label: "Home",
+  recipient_name: "",
+  postal_code: "",
+  city: "",
+  street: "",
+  building: "",
+  country: "United States",
+  country_code: "US",
+  phone: "",
+  is_default: false,
+};
 
+export const AddAddressModal = ({
+  isOpen,
+  onClose,
+  onSuccess,
+  showToast,
+  // When provided the modal operates in edit mode
+  editIndex = null,
+  initialData = null,
+}) => {
+  const isEditing = editIndex !== null && initialData !== null;
+
+  const [formData, setFormData] = useState(EMPTY_FORM);
   const [fieldErrors, setFieldErrors] = useState({});
-  const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState("");
+
+  const addAddressMutation = useAddAddress();
+  const updateAddressMutation = useUpdateAddress();
+  const activeMutation = isEditing ? updateAddressMutation : addAddressMutation;
+
+  // Populate form when opening in edit mode
+  useEffect(() => {
+    if (isOpen) {
+      setFormData(initialData ? { ...EMPTY_FORM, ...initialData } : EMPTY_FORM);
+      setFieldErrors({});
+      setFormError("");
+    }
+  }, [isOpen, initialData]);
 
   const countries = [
     { name: "United States", code: "US" },
@@ -108,38 +131,33 @@ export const AddAddressModal = ({ isOpen, onClose, onSuccess, showToast }) => {
     }
 
     setFormError("");
-    setLoading(true);
 
     try {
-      await authService.addAddress(formData);
-      if (showToast) showToast("Address added successfully.", "success");
+      if (isEditing) {
+        await updateAddressMutation.mutateAsync({
+          idx: editIndex,
+          addressData: formData,
+        });
+        if (showToast) showToast("Address updated successfully.", "success");
+      } else {
+        await addAddressMutation.mutateAsync(formData);
+        if (showToast) showToast("Address added successfully.", "success");
+      }
       if (onSuccess) onSuccess();
       handleClose();
     } catch (err) {
       const msg = getApiErrorMessage(
         err,
-        "Failed to add address. Please try again.",
+        isEditing
+          ? "Failed to update address. Please try again."
+          : "Failed to add address. Please try again.",
       );
       setFormError(msg);
       if (showToast) showToast(msg, "error");
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleClose = () => {
-    setFormData({
-      label: "Home",
-      recipient_name: "",
-      postal_code: "",
-      city: "",
-      street: "",
-      building: "",
-      country: "United States",
-      country_code: "US",
-      phone: "",
-      is_default: false,
-    });
     setFieldErrors({});
     setFormError("");
     onClose();
@@ -167,7 +185,7 @@ export const AddAddressModal = ({ isOpen, onClose, onSuccess, showToast }) => {
       >
         <div className="modal-header">
           <h2 id="address-modal-title" className="modal-title">
-            Add New Address
+            {isEditing ? "Edit Address" : "Add New Address"}
           </h2>
           <button
             className="modal-close"
@@ -356,11 +374,25 @@ export const AddAddressModal = ({ isOpen, onClose, onSuccess, showToast }) => {
         </div>
 
         <div className="modal-footer">
-          <Button variant="ghost" onClick={handleClose} disabled={loading}>
+          <Button
+            variant="ghost"
+            onClick={handleClose}
+            disabled={activeMutation.isPending}
+          >
             Cancel
           </Button>
-          <Button variant="primary" onClick={handleSubmit} disabled={loading}>
-            {loading ? "Adding..." : "Add Address"}
+          <Button
+            variant="primary"
+            onClick={handleSubmit}
+            disabled={activeMutation.isPending}
+          >
+            {activeMutation.isPending
+              ? isEditing
+                ? "Saving..."
+                : "Adding..."
+              : isEditing
+                ? "Save Changes"
+                : "Add Address"}
           </Button>
         </div>
       </div>
