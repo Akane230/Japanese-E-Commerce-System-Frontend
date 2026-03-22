@@ -1,0 +1,128 @@
+/* =========================================================
+   QuantityControl.css
+   Modern quantity selector component
+   ========================================================= */
+
+.quantity-control {
+  display: flex;
+  align-items: center;
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  width: fit-content;
+  background: white;
+  transition: border-color 0.2s ease;
+}
+
+.quantity-control:hover {
+  border-color: var(--border-medium);
+}
+
+.quantity-control:focus-within {
+  border-color: var(--accent-rose);
+  box-shadow: 0 0 0 4px rgba(232, 122, 122, 0.08);
+}
+
+/* Sizes */
+.quantity-control--small {
+  height: 32px;
+}
+
+.quantity-control--small .quantity-control__btn {
+  width: 32px;
+}
+
+.quantity-control--small .quantity-control__input {
+  width: 36px;
+  font-size: 13px;
+}
+
+.quantity-control--medium {
+  height: 40px;
+}
+
+.quantity-control--medium .quantity-control__btn {
+  width: 40px;
+}
+
+.quantity-control--medium .quantity-control__input {
+  width: 44px;
+  font-size: 14px;
+}
+
+.quantity-control--large {
+  height: 48px;
+}
+
+.quantity-control--large .quantity-control__btn {
+  width: 48px;
+}
+
+.quantity-control--large .quantity-control__input {
+  width: 52px;
+  font-size: 15px;
+}
+
+/* Buttons */
+.quantity-control__btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+  height: 100%;
+}
+
+.quantity-control__btn:hover:not(:disabled) {
+  background: var(--bg-secondary);
+  color: var(--accent-rose);
+}
+
+.quantity-control__btn:disabled {
+  color: var(--text-muted);
+  cursor: not-allowed;
+  background: var(--bg-secondary);
+}
+
+/* Input */
+.quantity-control__input {
+  text-align: center;
+  font-weight: 600;
+  border: none;
+  border-left: 2px solid var(--border-light);
+  border-right: 2px solid var(--border-light);
+  outline: none;
+  padding: 0;
+  background: white;
+  color: var(--text-primary);
+  -moz-appearance: textfield;
+  height: 100%;
+}
+
+.quantity-control__input::-webkit-outer-spin-button,
+.quantity-control__input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.quantity-control__input:focus {
+  background: var(--bg-secondary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .quantity-control--large {
+    height: 44px;
+  }
+  
+  .quantity-control--large .quantity-control__btn {
+    width: 44px;
+  }
+  
+  .quantity-control--large .quantity-control__input {
+    width: 48px;
+  }
+}

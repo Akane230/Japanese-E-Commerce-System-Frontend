@@ -1,0 +1,30 @@
+/* Price.css */
+.price {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+
+.price--sale{
+
+}
+
+.price__current {
+  font-size: 19px;
+  font-weight: 700;
+  color: #e8637a;
+  line-height: 1;
+}
+
+.price__original {
+  font-size: 13px;
+  color: #8c7e6e;
+  font-weight: 400;
+}
+
+.price__only {
+  font-size: 19px;
+  font-weight: 700;
+  color: #1a1008;
+  line-height: 1;
+}
