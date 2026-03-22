@@ -7,9 +7,8 @@ import axios from "axios";
  * and response normalization for the Django backend API.
  */
 
-// Base Axios instance configured for the Django API (proxied by Vite as /api)
 const api = axios.create({
-  baseURL: "/api",
+  baseURL: import.meta.env.VITE_API_URL,
   withCredentials: true,
 });
 
@@ -163,13 +162,22 @@ function normalizeProduct(prod) {
   // Helper to generate Cloudinary URL
   const getCloudinaryUrl = (publicId, options = {}) => {
     if (!publicId) return "";
-    const {
-      width = 300,
-      height = 300,
-      crop = "fill",
-      quality = "auto",
-    } = options;
-    return `https://res.cloudinary.com/${cloudName}/image/upload/c_${crop},w_${width},h_${height},q_${quality}/${publicId}`;
+
+    // If no options are provided, return the original (full-res) asset URL.
+    const hasTransforms = Object.keys(options).length > 0;
+    if (!hasTransforms) {
+      return `https://res.cloudinary.com/${cloudName}/image/upload/${publicId}`;
+    }
+
+    const { width, height, crop = "fill", quality = "auto" } = options;
+
+    const transforms = [];
+    if (crop) transforms.push(`c_${crop}`);
+    if (width) transforms.push(`w_${width}`);
+    if (height) transforms.push(`h_${height}`);
+    if (quality) transforms.push(`q_${quality}`);
+
+    return `https://res.cloudinary.com/${cloudName}/image/upload/${transforms.join(",")}/${publicId}`;
   };
 
   // Core identifiers
@@ -196,12 +204,9 @@ function normalizeProduct(prod) {
 
   // Media handling - generate Cloudinary URLs
   if (p.media) {
-    // Generate thumbnail URL
+    // Generate thumbnail URL (use original full resolution)
     if (p.media.thumbnail) {
-      p.thumbnail = getCloudinaryUrl(p.media.thumbnail, {
-        width: 300,
-        height: 300,
-      });
+      p.thumbnail = getCloudinaryUrl(p.media.thumbnail);
       p.image = p.thumbnail; // Use as primary image
     }
 
@@ -333,6 +338,36 @@ export const authApi = {
       return unwrap(res);
     } catch (error) {
       console.error("[Auth API] Failed to add address:", error);
+      throw error;
+    }
+  },
+
+  async updateAddress(idx, payload) {
+    try {
+      const res = await api.put(`/auth/addresses/${idx}/update/`, payload);
+      return unwrap(res);
+    } catch (error) {
+      console.error("[Auth API] Failed to update address:", error);
+      throw error;
+    }
+  },
+
+  async removeAddress(idx) {
+    try {
+      const res = await api.delete(`/auth/addresses/${idx}/`);
+      return unwrap(res);
+    } catch (error) {
+      console.error("[Auth API] Failed to remove address:", error);
+      throw error;
+    }
+  },
+
+  async setDefaultAddress(idx) {
+    try {
+      const res = await api.post(`/auth/addresses/${idx}/set-default/`);
+      return unwrap(res);
+    } catch (error) {
+      console.error("[Auth API] Failed to set default address:", error);
       throw error;
     }
   },
@@ -588,6 +623,22 @@ export const paymentApi = {
       return unwrap(res);
     } catch (error) {
       console.error("[Payment API] Failed to submit payment:", error);
+      throw error;
+    }
+  },
+
+  async upload(file) {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await api.post("/payments/upload/", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      return unwrap(res);
+    } catch (error) {
+      console.error("[Payment API] Failed to upload payment proof:", error);
       throw error;
     }
   },

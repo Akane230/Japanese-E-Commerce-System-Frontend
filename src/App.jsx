@@ -66,10 +66,7 @@ function InnerApp({ page, slug, categoryFilter, orderNumber, onNavigate }) {
       {page === "dashboard" && <DashboardPage onNavigate={onNavigate} />}
       {page === "auth" && <AuthPage onNavigate={onNavigate} />}
       {page === "tracking" && (
-        <TrackingPage
-          initialOrderNumber={orderNumber}
-          onNavigate={onNavigate}
-        />
+        <TrackingPage orderNumber={orderNumber} onNavigate={onNavigate} />
       )}
     </div>
   );

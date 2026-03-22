@@ -36,6 +36,21 @@ export const authService = {
     return authApi.addAddress(addressData);
   },
 
+  // Update address by index
+  async updateAddress(idx, addressData) {
+    return authApi.updateAddress(idx, addressData);
+  },
+
+  // Remove address by index
+  async removeAddress(idx) {
+    return authApi.removeAddress(idx);
+  },
+
+  // Set default address by index
+  async setDefaultAddress(idx) {
+    return authApi.setDefaultAddress(idx);
+  },
+
   // Add payment method
   async addPaymentMethod(paymentData) {
     return authApi.addPaymentMethod(paymentData);
