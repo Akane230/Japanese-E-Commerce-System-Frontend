@@ -1,4 +1,3 @@
-// ─── ProductsPage.jsx ──────────────────────────────────────────────────────────
 import React, { useState } from "react";
 import { ProductCard } from "../product/ProductCard";
 import { ProductFilters } from "../product/ProductFilters";
@@ -7,6 +6,9 @@ import { useCategories } from "../../hooks/useCategories";
 import { useAuth } from "../../hooks/useAuth";
 import { useToggleWishlist } from "../../hooks/useAuthMutations";
 import { getApiErrorMessage } from "../../utils/api";
+import { getCategoryName } from "../../utils/helpers";
+import { Icons } from "../common/Icons";
+import "../../styles/pages/ProductsPage.css";
 
 export const ProductsPage = ({
   onNavigate,
@@ -17,6 +19,7 @@ export const ProductsPage = ({
   const [sortBy, setSortBy] = useState("newest");
   const [catFilter, setCatFilter] = useState(defaultCategory || "all");
   const [maxPrice, setMaxPrice] = useState(1000);
+  const [viewMode, setViewMode] = useState("grid"); // 'grid' or 'list'
 
   // Build query params for server-side filtering
   const queryParams = {
@@ -25,7 +28,6 @@ export const ProductsPage = ({
     sort_by: sortBy,
     ...(catFilter !== "all" && { category_slug: catFilter }),
     ...(search && { search }),
-    // Only apply max price filter when user lowers it below the default ceiling
     ...(maxPrice && maxPrice < 1000 ? { max_price: maxPrice } : {}),
   };
 
@@ -45,6 +47,7 @@ export const ProductsPage = ({
 
   const products = productsData?.results || productsData || [];
   const categories = categoriesData || [];
+  const totalCount = productsData?.count || products.length;
 
   const loading = productsLoading || categoriesLoading;
   const error =
@@ -55,201 +58,156 @@ export const ProductsPage = ({
         )
       : "";
 
-  const filtered = products; // Server-side filtering now
-
-  // Keep category filter in sync when the parent navigation changes
-  React.useEffect(() => {
-    if (defaultCategory) {
-      setCatFilter(defaultCategory);
-    }
-  }, [defaultCategory]);
-
   return (
-    <div style={{ maxWidth: 1240, margin: "0 auto", padding: "36px 20px" }}>
-      <div style={{ marginBottom: 24 }}>
-        <div
-          style={{
-            fontSize: 10.5,
-            letterSpacing: "0.18em",
-            textTransform: "uppercase",
-            color: "#e8637a",
-            fontWeight: 700,
-            marginBottom: 5,
-          }}
-        >
-          Explore
+    <div className="products-page">
+      <div className="container">
+        {/* Header */}
+        <div className="products-header">
+          <div className="products-header__content">
+            <span className="products-header__eyebrow">Explore</span>
+            <h1 className="products-header__title">All Products</h1>
+            <p className="products-header__subtitle">日本の製品</p>
+          </div>
+          {/* <div className="products-header__stats">
+            <span className="products-stats__count">{totalCount}</span>
+            <span className="products-stats__label">
+              authentic Japanese goods
+            </span>
+          </div> */}
         </div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "baseline",
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-            gap: 10,
-          }}
-        >
-          <h1
-            style={{
-              fontFamily: "'Noto Serif JP', serif",
-              fontSize: 26,
-              margin: 0,
-              color: "#1a1008",
-              fontWeight: 700,
-            }}
-          >
-            All Products
-          </h1>
-          <span style={{ fontSize: 13, color: "#b8aa98", fontWeight: 600 }}>
-            {productsData?.count || filtered.length} authentic Japanese goods
-          </span>
-        </div>
-      </div>
 
-      <ProductFilters
-        categories={categories}
-        search={search}
-        onSearchChange={setSearch}
-        category={catFilter}
-        onCategoryChange={setCatFilter}
-        sortBy={sortBy}
-        onSortChange={setSortBy}
-        maxPrice={maxPrice}
-        onPriceChange={setMaxPrice}
-      />
+        {/* Filters */}
+        <ProductFilters
+          categories={categories}
+          search={search}
+          onSearchChange={setSearch}
+          category={catFilter}
+          onCategoryChange={setCatFilter}
+          sortBy={sortBy}
+          onSortChange={setSortBy}
+          maxPrice={maxPrice}
+          onPriceChange={setMaxPrice}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          totalResults={totalCount}
+        />
 
-      {loading ? (
-        <div
-          style={{ textAlign: "center", padding: "80px 0", color: "#8c7e6e" }}
-        >
-          <div
-            style={{
-              width: 80,
-              height: 80,
-              borderRadius: "50%",
-              background: "#f0ebe0",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 36,
-              margin: "0 auto 18px",
-            }}
-          >
-            🌸
+        {/* Active Filters */}
+        {(search || catFilter !== "all" || maxPrice < 1000) && (
+          <div className="active-filters">
+            <span className="active-filters__label">Active filters:</span>
+            <div className="active-filters__list">
+              {search && (
+                <button className="filter-tag" onClick={() => setSearch("")}>
+                  Search: "{search}"
+                  <Icons.X size={12} />
+                </button>
+              )}
+              {catFilter !== "all" && (
+                <button
+                  className="filter-tag"
+                  onClick={() => setCatFilter("all")}
+                >
+                  Category:{" "}
+                  {getCategoryName(
+                    categories.find((c) => (c.slug || c.id) === catFilter),
+                  ) || catFilter}
+                  <Icons.X size={12} />
+                </button>
+              )}
+              {maxPrice < 1000 && (
+                <button
+                  className="filter-tag"
+                  onClick={() => setMaxPrice(1000)}
+                >
+                  Max price: ${maxPrice}
+                  <Icons.X size={12} />
+                </button>
+              )}
+            </div>
           </div>
-          <h3
-            style={{
-              fontFamily: "'Noto Serif JP', serif",
-              margin: "0 0 8px",
-              fontSize: 18,
-              color: "#3d2415",
-            }}
-          >
-            Loading products…
-          </h3>
-          <p style={{ margin: 0, fontSize: 13.5 }}>
-            Fetching the latest catalog from the server.
-          </p>
-        </div>
-      ) : error ? (
-        <div
-          style={{ textAlign: "center", padding: "80px 0", color: "#8c7e6e" }}
-        >
-          <div
-            style={{
-              width: 80,
-              height: 80,
-              borderRadius: "50%",
-              background: "#f0ebe0",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 36,
-              margin: "0 auto 18px",
-            }}
-          >
-            ⚠️
+        )}
+
+        {/* Content */}
+        {loading ? (
+          <div className="products-loading">
+            <div className="loading-spinner">
+              <div className="spinner-circle" />
+              <div className="spinner-circle" />
+              <div className="spinner-circle" />
+            </div>
+            <h3 className="loading-title">Loading products…</h3>
+            <p className="loading-message">
+              Fetching the latest catalog from the server.
+            </p>
           </div>
-          <h3
-            style={{
-              fontFamily: "'Noto Serif JP', serif",
-              margin: "0 0 8px",
-              fontSize: 18,
-              color: "#3d2415",
-            }}
-          >
-            Couldn’t load products
-          </h3>
-          <p style={{ margin: 0, fontSize: 13.5 }}>{error}</p>
-        </div>
-      ) : filtered.length === 0 ? (
-        <div
-          style={{ textAlign: "center", padding: "80px 0", color: "#8c7e6e" }}
-        >
-          <div
-            style={{
-              width: 80,
-              height: 80,
-              borderRadius: "50%",
-              background: "#f0ebe0",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 36,
-              margin: "0 auto 18px",
-            }}
-          >
-            🔍
+        ) : error ? (
+          <div className="products-error">
+            <div className="error-icon" aria-hidden="true">
+              ⚠️
+            </div>
+            <h3 className="error-title">Couldn't load products</h3>
+            <p className="error-message">{error}</p>
+            <button
+              className="btn btn--primary"
+              onClick={() => window.location.reload()}
+            >
+              Try Again
+            </button>
           </div>
-          <h3
-            style={{
-              fontFamily: "'Noto Serif JP', serif",
-              margin: "0 0 8px",
-              fontSize: 18,
-              color: "#3d2415",
-            }}
-          >
-            No products found
-          </h3>
-          <p style={{ margin: 0, fontSize: 13.5 }}>
-            Try adjusting your filters or search terms
-          </p>
-        </div>
-      ) : (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(210px, 1fr))",
-            gap: 18,
-          }}
-        >
-          {filtered.map((p, i) => (
-            <div
-              key={p.id}
-              style={{
-                animation: `fadeUp 0.35s ease ${Math.min(i, 8) * 0.05}s both`,
+        ) : products.length === 0 ? (
+          <div className="products-empty">
+            <div className="empty-icon" aria-hidden="true">
+              🔍
+            </div>
+            <h3 className="empty-title">No products found</h3>
+            <p className="empty-message">
+              Try adjusting your filters or search terms
+            </p>
+            <button
+              className="btn btn--secondary"
+              onClick={() => {
+                setSearch("");
+                setCatFilter("all");
+                setMaxPrice(1000);
               }}
             >
-              <ProductCard
-                product={p}
-                onNavigate={onNavigate}
-                onAddToCart={addToCart}
-                isWished={
-                  Array.isArray(user?.wishlist) &&
-                  user.wishlist.includes(String(p.id))
-                }
-                onToggleWishlist={() => toggleWishlist.mutate(p.id)}
-              />
+              Clear All Filters
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className={`products-grid products-grid--${viewMode}`}>
+              {products.map((p, i) => (
+                <div
+                  key={p.id}
+                  className="product-item"
+                  style={{ animationDelay: `${Math.min(i, 8) * 0.05}s` }}
+                >
+                  <ProductCard
+                    product={p}
+                    onNavigate={onNavigate}
+                    onAddToCart={addToCart}
+                    isWished={
+                      Array.isArray(user?.wishlist) &&
+                      user.wishlist.includes(String(p.id))
+                    }
+                    onToggleWishlist={() => toggleWishlist.mutate(p.id)}
+                  />
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      )}
 
-      <style>{`
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(14px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
+            {/* Results summary */}
+            <div className="products-summary">
+              <p>
+                Showing <strong>{products.length}</strong> of{" "}
+                <strong>{totalCount}</strong> products
+              </p>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 };

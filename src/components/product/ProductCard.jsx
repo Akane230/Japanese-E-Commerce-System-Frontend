@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Icons } from "../common/Icons";
 import { Stars } from "../common/Stars";
 import { Price } from "../common/Price";
+import "../../styles/pages/ProductCard.css";
 
 export function ProductCard({
   product,
@@ -26,14 +27,10 @@ export function ProductCard({
     setTimeout(() => setAdded(false), 1400);
   };
 
-  /**
-   * Get the best available image URL for the product
-   */
   const getImageUrl = () => {
     if (imageError) {
       return "https://via.placeholder.com/300x300?text=Product+Image";
     }
-
     return (
       product.image ||
       product.thumbnail ||
@@ -48,224 +45,81 @@ export function ProductCard({
   };
 
   return (
-    <div
+    <article
+      className={`product-card ${hovered ? "product-card--hovered" : ""}`}
       onClick={() => onNavigate("product", product.slug)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      style={{
-        background: "white",
-        borderRadius: 20,
-        overflow: "hidden",
-        border: "1.5px solid",
-        borderColor: hovered ? "#d4c4b4" : "#ede5d8",
-        cursor: "pointer",
-        transition:
-          "transform 0.25s cubic-bezier(0.34,1.2,0.64,1), box-shadow 0.25s ease, border-color 0.2s",
-        transform: hovered ? "translateY(-5px)" : "none",
-        boxShadow: hovered
-          ? "0 16px 44px rgba(26,16,8,0.12), 0 4px 12px rgba(26,16,8,0.06)"
-          : "0 2px 8px rgba(26,16,8,0.04)",
-        position: "relative",
-      }}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) =>
+        e.key === "Enter" && onNavigate("product", product.slug)
+      }
+      aria-label={`View ${product.name}`}
     >
-      {/* Image */}
-      <div
-        style={{
-          position: "relative",
-          paddingTop: "100%",
-          background: "#f5efe6",
-          overflow: "hidden",
-        }}
-      >
-        <img
-          src={getImageUrl()}
-          alt={product.name}
-          onError={handleImageError}
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            transition: "transform 0.4s ease",
-            transform: hovered ? "scale(1.06)" : "scale(1)",
-          }}
-          loading="lazy"
-        />
-
-        {/* Overlay gradient on hover */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background:
-              "linear-gradient(to top, rgba(26,16,8,0.18) 0%, transparent 50%)",
-            opacity: hovered ? 1 : 0,
-            transition: "opacity 0.3s ease",
-            pointerEvents: "none",
-          }}
-        />
+      <div className="product-card__media">
+        <div className="product-card__image-wrapper">
+          <img
+            src={getImageUrl()}
+            alt={product.name}
+            onError={handleImageError}
+            className={`product-card__image ${hovered ? "product-card__image--zoomed" : ""}`}
+            loading="lazy"
+          />
+        </div>
 
         {/* Badges */}
-        <div
-          style={{
-            position: "absolute",
-            top: 10,
-            left: 10,
-            display: "flex",
-            flexDirection: "column",
-            gap: 5,
-          }}
-        >
+        <div className="product-card__badges">
           {product.salePrice && product.salePrice < product.price && (
-            <span
-              style={{
-                background: "linear-gradient(135deg, #e8637a, #d44f67)",
-                color: "white",
-                fontSize: 10,
-                fontWeight: 800,
-                padding: "3px 8px",
-                borderRadius: 20,
-                letterSpacing: "0.04em",
-                textTransform: "uppercase",
-                boxShadow: "0 2px 8px rgba(232,99,122,0.4)",
-              }}
-            >
-              Sale
+            <span className="product-card__badge product-card__badge--sale">
+              SALE
             </span>
           )}
           {product.isBestseller && (
-            <span
-              style={{
-                background: "rgba(26,16,8,0.85)",
-                backdropFilter: "blur(8px)",
-                color: "#faf7f2",
-                fontSize: 10,
-                fontWeight: 700,
-                padding: "3px 8px",
-                borderRadius: 20,
-                letterSpacing: "0.04em",
-              }}
-            >
-              Best Seller
+            <span className="product-card__badge product-card__badge--bestseller">
+              BESTSELLER
             </span>
           )}
         </div>
 
         {/* Wishlist */}
         <button
+          className={`product-card__wishlist ${wished ? "product-card__wishlist--active" : ""}`}
           onClick={(e) => {
             e.stopPropagation();
             setWished((prev) => !prev);
             if (onToggleWishlist) onToggleWishlist(product.id);
           }}
-          style={{
-            position: "absolute",
-            top: 10,
-            right: 10,
-            width: 32,
-            height: 32,
-            borderRadius: "50%",
-            background: wished
-              ? "rgba(232,99,122,0.95)"
-              : "rgba(250,247,242,0.9)",
-            border: "none",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            backdropFilter: "blur(8px)",
-            transition: "background 0.2s, transform 0.2s",
-            transform: wished ? "scale(1.1)" : "scale(1)",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
-            color: wished ? "white" : "#8c7e6e",
-          }}
+          aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
+          aria-pressed={wished}
         >
           <Icons.Heart filled={wished} />
         </button>
       </div>
 
-      {/* Content */}
-      <div style={{ padding: "14px 16px 16px" }}>
-        <div
-          style={{
-            fontSize: 10,
-            color: "#b8aa98",
-            textTransform: "uppercase",
-            letterSpacing: "0.12em",
-            marginBottom: 3,
-            fontWeight: 600,
-          }}
-        >
+      <div className="product-card__content">
+        <div className="product-card__brand">
           {product.brand || "Sakura Shop"}
         </div>
-        <div
-          style={{
-            fontWeight: 700,
-            fontSize: 13.5,
-            color: "#1a1008",
-            marginBottom: 1,
-            lineHeight: 1.35,
-          }}
-        >
-          {product.name}
-        </div>
-        <div
-          style={{
-            fontSize: 11,
-            color: "#b8aa98",
-            marginBottom: 8,
-            fontFamily: "'Noto Serif JP', serif",
-          }}
-        >
-          {product.nameJa}
-        </div>
-        <Stars rating={product.rating || 0} count={product.reviews || 0} />
+        <h3 className="product-card__title">{product.name}</h3>
+        <div className="product-card__title-jp">{product.nameJa}</div>
 
-        <div
-          style={{
-            marginTop: 10,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
+        <div className="product-card__rating">
+          <Stars rating={product.rating || 0} count={product.reviews || 0} />
+        </div>
+
+        <div className="product-card__footer">
           <Price price={product.price} salePrice={product.salePrice} />
           <button
+            className={`product-card__cart-btn ${added ? "product-card__cart-btn--added" : ""}`}
             onClick={handleAdd}
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 10,
-              border: "none",
-              background: added
-                ? "linear-gradient(135deg, #2d6a4f, #40916c)"
-                : "linear-gradient(135deg, #e8637a, #d44f67)",
-              color: "white",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              transition: "background 0.25s, transform 0.2s",
-              transform: added ? "scale(0.92)" : "scale(1)",
-              boxShadow: added
-                ? "0 3px 10px rgba(45,106,79,0.35)"
-                : "0 3px 10px rgba(232,99,122,0.35)",
-              flexShrink: 0,
-            }}
-            onMouseEnter={(e) =>
-              !added && (e.currentTarget.style.transform = "scale(1.1)")
-            }
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.transform = added
-                ? "scale(0.92)"
-                : "scale(1)")
-            }
+            aria-label={added ? "Added to cart" : "Add to cart"}
+            aria-live="polite"
           >
-            {added ? <Icons.Check /> : <Icons.Plus />}
+            {added ? <Icons.Check size={16} /> : <Icons.Plus size={16} />}
           </button>
         </div>
       </div>
-    </div>
+    </article>
   );
 }
