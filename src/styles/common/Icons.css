@@ -1,0 +1,13 @@
+/* Icons.css - Refined */
+
+.icon {
+  display: inline-block;
+  vertical-align: middle;
+  transition: all 0.2s ease;
+  width: auto;
+  height: auto;
+}
+
+.icon--filled {
+  color: #c0270f;
+}

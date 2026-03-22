@@ -1,0 +1,41 @@
+/* Chip.css */
+.chip {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 40px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  display: inline-block;
+  border: 1px solid transparent;
+}
+
+.chip--neutral {
+  background: #f3f0eb;
+  color: #6b5f53;
+  border-color: #e5dfd9;
+}
+
+.chip--pink {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+.chip--green {
+  background: #f0fdf4;
+  color: #059669;
+  border-color: #dcfce7;
+}
+
+.chip--dark {
+  background: #1e1e1e;
+  color: #fcfaf7;
+  border-color: #2d2d2d;
+}
+
+.chip--gold {
+  background: #fffbeb;
+  color: #b45309;
+  border-color: #fef3c7;
+}
