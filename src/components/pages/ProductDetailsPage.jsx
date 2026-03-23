@@ -230,7 +230,11 @@ export const ProductDetailPage = ({ slug, onNavigate, addToCart }) => {
 
             {/* Price */}
             <div className="product-price">
-              <Price price={productPrice} salePrice={productSalePrice} />
+              <Price
+                price={productPrice}
+                salePrice={productSalePrice}
+                currency={product?.currency || "JPY"}
+              />
             </div>
 
             {/* Product Meta */}

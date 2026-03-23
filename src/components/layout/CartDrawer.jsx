@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { useCart } from "../../hooks/useCart";
+import { formatPrice } from "../../utils/helpers";
 import { Icons } from "../common/Icons";
-import { Button } from "../common/Button";
 import { QuantityControl } from "../common/QuantityControl";
 import "../../styles/layout/CartDrawer.css";
 
 export function CartDrawer({ onNavigate }) {
   const { items, total, isOpen, setIsOpen, updateQuantity, removeItem } =
     useCart();
+  // Use the first item's currency, or default to JPY
+  const currency = items.length > 0 ? items[0]?.currency || "JPY" : "JPY";
 
   // console.log(
   //   "CartDrawer render - items:",
@@ -142,7 +144,8 @@ export function CartDrawer({ onNavigate }) {
                   </div>
 
                   <div className="cart-item__price">
-                    ${(item.salePrice || item.price || 0).toFixed(2)} each
+                    {formatPrice(item.salePrice || item.price || 0, currency)}{" "}
+                    each
                   </div>
 
                   <div className="cart-item__footer">
@@ -151,9 +154,9 @@ export function CartDrawer({ onNavigate }) {
                       setQty={(q) => updateQuantity(item.id, q)}
                     />
                     <span className="cart-item__total">
-                      $
-                      {((item.salePrice || item.price || 0) * item.qty).toFixed(
-                        2,
+                      {formatPrice(
+                        (item.salePrice || item.price || 0) * item.qty,
+                        currency,
                       )}
                     </span>
                   </div>
@@ -169,12 +172,14 @@ export function CartDrawer({ onNavigate }) {
             <div className="cart-footer__summary">
               <div className="summary-row">
                 <span>Subtotal</span>
-                <span className="summary-row__value">${total.toFixed(2)}</span>
+                <span className="summary-row__value">
+                  {formatPrice(total, currency)}
+                </span>
               </div>
               <div className="summary-row summary-row--total">
                 <span>Total</span>
                 <span className="summary-row__total">
-                  ${(total + shipping).toFixed(2)}
+                  {formatPrice(total + shipping, currency)}
                 </span>
               </div>
             </div>

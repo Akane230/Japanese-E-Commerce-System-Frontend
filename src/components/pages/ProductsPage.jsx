@@ -6,7 +6,7 @@ import { useCategories } from "../../hooks/useCategories";
 import { useAuth } from "../../hooks/useAuth";
 import { useToggleWishlist } from "../../hooks/useAuthMutations";
 import { getApiErrorMessage } from "../../utils/api";
-import { getCategoryName } from "../../utils/helpers";
+import { getCategoryName, formatPrice } from "../../utils/helpers";
 import { Icons } from "../common/Icons";
 import "../../styles/pages/ProductsPage.css";
 
@@ -18,7 +18,7 @@ export const ProductsPage = ({
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("newest");
   const [catFilter, setCatFilter] = useState(defaultCategory || "all");
-  const [maxPrice, setMaxPrice] = useState(1000);
+  const [maxPrice, setMaxPrice] = useState(10000);
   const [viewMode, setViewMode] = useState("grid"); // 'grid' or 'list'
 
   // Build query params for server-side filtering
@@ -28,7 +28,7 @@ export const ProductsPage = ({
     sort_by: sortBy,
     ...(catFilter !== "all" && { category_slug: catFilter }),
     ...(search && { search }),
-    ...(maxPrice && maxPrice < 1000 ? { max_price: maxPrice } : {}),
+    ...(maxPrice && maxPrice < 10000 ? { max_price: maxPrice } : {}),
   };
 
   const { user } = useAuth();
@@ -90,6 +90,7 @@ export const ProductsPage = ({
           viewMode={viewMode}
           onViewModeChange={setViewMode}
           totalResults={totalCount}
+          currency="JPY"
         />
 
         {/* Active Filters */}
@@ -115,12 +116,12 @@ export const ProductsPage = ({
                   <Icons.X size={12} />
                 </button>
               )}
-              {maxPrice < 1000 && (
+              {maxPrice < 10000 && (
                 <button
                   className="filter-tag"
-                  onClick={() => setMaxPrice(1000)}
+                  onClick={() => setMaxPrice(10000)}
                 >
-                  Max price: ${maxPrice}
+                  Max price: {formatPrice(maxPrice, "JPY")}
                   <Icons.X size={12} />
                 </button>
               )}
@@ -169,7 +170,7 @@ export const ProductsPage = ({
               onClick={() => {
                 setSearch("");
                 setCatFilter("all");
-                setMaxPrice(1000);
+                setMaxPrice(10000);
               }}
             >
               Clear All Filters

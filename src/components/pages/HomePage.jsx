@@ -1,7 +1,5 @@
 import React, { useState } from "react";
 import { ProductCard } from "../product/ProductCard";
-import { Stars } from "../common/Stars";
-import { Chip } from "../common/Chip";
 import { useProducts, useFeaturedProducts } from "../../hooks/useProducts";
 import { useCategories } from "../../hooks/useCategories";
 import { getApiErrorMessage } from "../../utils/api";
@@ -11,7 +9,6 @@ import "../../styles/pages/HomePage.css";
 
 export const HomePage = ({ onNavigate, addToCart }) => {
   const [bestsellers, setBestsellers] = useState([]);
-
   const { mutateAsync: toggleWishlist } = useToggleWishlist();
 
   const {
@@ -144,7 +141,7 @@ export const HomePage = ({ onNavigate, addToCart }) => {
               <button
                 key={cat.id}
                 className="category-card"
-                onClick={() => onNavigate("products")}
+                onClick={() => onNavigate("products", cat.slug)}
               >
                 <span className="category-card__emoji" aria-hidden="true">
                   {cat.emoji || "📦"}
