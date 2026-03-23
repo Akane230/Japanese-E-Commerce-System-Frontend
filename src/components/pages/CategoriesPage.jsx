@@ -117,7 +117,7 @@ export function CategoriesPage({ onNavigate }) {
           {categories.map((category) => (
             <button
               key={category.id}
-              onClick={() => onNavigate("products", category.id)}
+              onClick={() => onNavigate("products", category.slug || category.id)}
               style={{
                 border: "1.5px solid #ede5d8",
                 borderRadius: 20,
