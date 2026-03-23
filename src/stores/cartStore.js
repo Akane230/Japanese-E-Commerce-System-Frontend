@@ -17,6 +17,7 @@ const normalizeCart = (data) => {
       price: price,
       salePrice: null, // Backend doesn't provide sale price in current structure
       qty: quantity,
+      currency: item.currency || "JPY", // Store product's currency
     };
   });
 

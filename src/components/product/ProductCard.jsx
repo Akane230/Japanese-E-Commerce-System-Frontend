@@ -109,7 +109,11 @@ export function ProductCard({
         </div>
 
         <div className="product-card__footer">
-          <Price price={product.price} salePrice={product.salePrice} />
+          <Price
+            price={product.price}
+            salePrice={product.salePrice}
+            currency={product.currency || "JPY"}
+          />
           <button
             className={`product-card__cart-btn ${added ? "product-card__cart-btn--added" : ""}`}
             onClick={handleAdd}

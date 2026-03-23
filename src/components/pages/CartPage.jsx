@@ -1,12 +1,15 @@
 import React from "react";
 import { useCart } from "../../hooks/useCart";
 import { useAuth } from "../../hooks/useAuth";
+import { formatPrice } from "../../utils/helpers";
 import { QuantityControl } from "../common/QuantityControl";
 import "../../styles/pages/CartPage.css";
 
 export const CartPage = ({ onNavigate }) => {
   const { items, total, updateQuantity, removeItem } = useCart();
   const { isAuthenticated } = useAuth();
+  // Use the first item's currency, or default to JPY
+  const currency = items.length > 0 ? items[0]?.currency || "JPY" : "JPY";
   const shipping = total >= 80 ? 0 : 12.99;
   // const freeShippingProgress = Math.min((total / 80) * 100, 100);
 
@@ -58,7 +61,8 @@ export const CartPage = ({ onNavigate }) => {
                   <div className="cart-item__name-jp">{item.nameJa}</div>
                 )}
                 <div className="cart-item__unit-price">
-                  ${(item.salePrice || item.price || 0).toFixed(2)} each
+                  {formatPrice(item.salePrice || item.price || 0, currency)}{" "}
+                  each
                 </div>
 
                 <div className="cart-item__actions">
@@ -67,9 +71,9 @@ export const CartPage = ({ onNavigate }) => {
                     setQty={(q) => updateQuantity(item.id, q)}
                   />
                   <span className="cart-item__line-total">
-                    $
-                    {((item.salePrice || item.price || 0) * item.qty).toFixed(
-                      2,
+                    {formatPrice(
+                      (item.salePrice || item.price || 0) * item.qty,
+                      currency,
                     )}
                   </span>
                   <button
@@ -99,7 +103,7 @@ export const CartPage = ({ onNavigate }) => {
             <div className="cart-summary__row">
               <span className="cart-summary__row-label">Subtotal</span>
               <span className="cart-summary__row-value">
-                ${total.toFixed(2)}
+                {formatPrice(total, currency)}
               </span>
             </div>
 
@@ -108,7 +112,7 @@ export const CartPage = ({ onNavigate }) => {
               <div className="cart-shipping-nudge">
                 <div className="cart-shipping-nudge__label">
                   <span>
-                    Add ${(80 - total).toFixed(2)} more for free shipping
+                    Add {formatPrice(80 - total, currency)} more for free shipping
                   </span>
                   <span>{Math.round(freeShippingProgress)}%</span>
                 </div>
@@ -127,7 +131,7 @@ export const CartPage = ({ onNavigate }) => {
             <div className="cart-summary__total">
               <span className="cart-summary__total-label">Total</span>
               <span className="cart-summary__total-amount">
-                ${(total + shipping).toFixed(2)}
+                {formatPrice(total + shipping, currency)}
               </span>
             </div>
 

@@ -195,8 +195,9 @@ function normalizeProduct(prod) {
   }
 
   // Pricing
-  p.price = p.price || p.pricing?.effective_price || 0;
+  p.price = p.price || p.pricing?.base_price || 0;
   p.salePrice = p.sale_price || p.salePrice || p.pricing?.sale_price || null;
+  p.currency = p.currency || p.pricing?.currency || "JPY";
 
   // Defaults
   p.name = p.name || "Unnamed Product";

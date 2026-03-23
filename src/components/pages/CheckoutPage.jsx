@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useCart } from "../../hooks/useCart";
 import { useCreateOrder } from "../../hooks/useOrders";
 import { useAuth } from "../../hooks/useAuth";
+import { formatPrice } from "../../utils/helpers";
 import { ProtectedRoute } from "../common/ProtectedRoute";
 import { Icons } from "../common/Icons";
 import { paymentApi } from "../../utils/api";
@@ -11,6 +12,8 @@ export function CheckoutPage({ onNavigate }) {
   const { items, total, clearCart } = useCart();
   const createOrderMutation = useCreateOrder();
   const { user } = useAuth();
+  // Use the first item's currency, or default to JPY
+  const currency = items.length > 0 ? items[0]?.currency || "JPY" : "JPY";
   const [step, setStep] = useState(1);
   const [addr, setAddr] = useState({
     name: "",
@@ -53,7 +56,7 @@ export function CheckoutPage({ onNavigate }) {
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
 
-  const shippingFee = { economy: 8.99, standard: 12.99, express: 24.99 }[
+  const shippingFee = { economy: 1432, standard: 2068, express: 3979 }[
     shippingMethod
   ];
   const steps = ["Shipping", "Method", "Payment", "Review"];
@@ -85,7 +88,8 @@ export function CheckoutPage({ onNavigate }) {
         },
         payment_method: payment,
         shipping_service: shippingMethod,
-        currency: "PHP",
+        shipping_fee: shippingFee,
+        currency: currency, // Use product's currency
         customer_notes: paymentNotes || undefined,
       });
       setOrder(created);
@@ -318,21 +322,21 @@ export function CheckoutPage({ onNavigate }) {
                     id: "economy",
                     label: "Economy",
                     sub: "7–14 business days",
-                    price: "$8.99",
+                    price: 1431.52,
                     icon: "📬",
                   },
                   {
                     id: "standard",
                     label: "Standard",
                     sub: "5–9 business days",
-                    price: "$12.99",
+                    price: 2068.46,
                     icon: "📦",
                   },
                   {
                     id: "express",
                     label: "Express",
                     sub: "2–4 business days",
-                    price: "$24.99",
+                    price: 3979.28,
                     icon: "⚡",
                   },
                 ].map((opt) => (
@@ -350,7 +354,9 @@ export function CheckoutPage({ onNavigate }) {
                       <div className="option-card__label">{opt.label}</div>
                       <div className="option-card__sub">{opt.sub}</div>
                     </div>
-                    <strong className="option-card__price">{opt.price}</strong>
+                    <strong className="option-card__price">
+                      {formatPrice(opt.price, currency)}
+                    </strong>
                     {shippingMethod === opt.id && (
                       <span className="option-card__check">
                         <Icons.Check size={16} />
@@ -463,10 +469,10 @@ export function CheckoutPage({ onNavigate }) {
                         <div className="review-item__qty">Qty: {item.qty}</div>
                       </div>
                       <strong className="review-item__price">
-                        $
-                        {(
-                          (item.salePrice || item.price || 0) * item.qty
-                        ).toFixed(2)}
+                        {formatPrice(
+                          (item.salePrice || item.price) * item.qty,
+                          currency,
+                        )}
                       </strong>
                     </div>
                   ))}
@@ -548,7 +554,7 @@ export function CheckoutPage({ onNavigate }) {
                   >
                     {submittingPayment
                       ? "Submitting…"
-                      : `Submit Payment — $${(total + shippingFee).toFixed(2)}`}
+                      : `Submit Payment — ${formatPrice(total + shippingFee, currency)}`}
                   </button>
                 </div>
                 {error && <p className="checkout-error">{error}</p>}
@@ -567,7 +573,7 @@ export function CheckoutPage({ onNavigate }) {
                   <div className="summary-item__qty">×{i.qty}</div>
                 </div>
                 <span className="summary-item__price">
-                  ${((i.salePrice || i.price) * i.qty).toFixed(2)}
+                  {formatPrice((i.salePrice || i.price) * i.qty, currency)}
                 </span>
               </div>
             ))}
@@ -577,8 +583,8 @@ export function CheckoutPage({ onNavigate }) {
 
             <div className="summary-totals">
               {[
-                ["Subtotal", `$${total.toFixed(2)}`],
-                ["Shipping", `$${shippingFee.toFixed(2)}`],
+                ["Subtotal", formatPrice(total, currency)],
+                ["Shipping", formatPrice(shippingFee, currency)],
               ].map(([k, v]) => (
                 <div key={k} className="summary-row">
                   <span>{k}</span>
@@ -588,7 +594,7 @@ export function CheckoutPage({ onNavigate }) {
               <div className="summary-grand-total">
                 <span>Total</span>
                 <span className="summary-grand-total__amount">
-                  ${(total + shippingFee).toFixed(2)}
+                  {formatPrice(total + shippingFee, currency)}
                 </span>
               </div>
             </div>

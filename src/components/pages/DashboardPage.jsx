@@ -4,6 +4,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { useUpdateProfile } from "../../hooks/useAuthMutations";
 import { useRemoveAddress, useSetDefaultAddress } from "../../hooks/useAuth";
 import { orderApi, productApi, getApiErrorMessage } from "../../utils/api";
+import { formatPrice } from "../../utils/helpers";
 import { Icons } from "../common/Icons";
 import { Button } from "../common/Button";
 import { Chip } from "../common/Chip";
@@ -267,7 +268,7 @@ export function DashboardPage({ onNavigate }) {
                     {o.status_label || o.status || "Pending"}
                   </Chip>
                   <strong className="order-row__total">
-                    ${(parseFloat(o.grand_total) || 0).toFixed(2)}
+                    {formatPrice(o.grand_total, o.currency || "JPY")}
                   </strong>
                   {/* Pass order_number directly so TrackingPage auto-searches */}
                   <Button

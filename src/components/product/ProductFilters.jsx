@@ -1,5 +1,5 @@
 import React from "react";
-import { getCategoryName } from "../../utils/helpers";
+import { getCategoryName, formatPrice } from "../../utils/helpers";
 import { Icons } from "../common/Icons";
 import "../../styles/pages/ProductFilter.css";
 
@@ -14,6 +14,7 @@ export function ProductFilters({
   maxPrice,
   onPriceChange,
   totalResults = 0,
+  currency = "JPY",
 }) {
   // Helper function to safely get category name
   const getSafeCategoryName = (category) => {
@@ -107,7 +108,9 @@ export function ProductFilters({
         <div className="filter-group filter-group--range">
           <div className="price-range-header">
             <label className="filter-group__label">Max Price</label>
-            <span className="price-range-value">¥{maxPrice}</span>
+            <span className="price-range-value">
+              {formatPrice(maxPrice, currency)}
+            </span>
           </div>
           <div className="price-range">
             <input
@@ -120,8 +123,8 @@ export function ProductFilters({
               aria-label="Maximum price"
             />
             <div className="price-range__labels">
-              <span>¥100</span>
-              <span>¥10,000</span>
+              <span>{formatPrice(100, currency)}</span>
+              <span>{formatPrice(10000, currency)}</span>
             </div>
           </div>
         </div>

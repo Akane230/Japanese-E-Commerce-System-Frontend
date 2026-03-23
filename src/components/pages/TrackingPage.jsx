@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { orderApi } from "../../utils/api";
+import { useAuth } from "../../hooks/useAuth";
+import { formatPrice } from "../../utils/helpers";
 import "../../styles/pages/TrackingPage.css";
 
 export function TrackingPage({ orderNumber: initialOrderNumber, onNavigate }) {
@@ -7,6 +9,7 @@ export function TrackingPage({ orderNumber: initialOrderNumber, onNavigate }) {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { user } = useAuth();
 
   const fetchOrder = async (num) => {
     if (!num?.trim()) return;
@@ -113,7 +116,7 @@ export function TrackingPage({ orderNumber: initialOrderNumber, onNavigate }) {
             <div className="tracking-total">
               <strong>Total:</strong>{" "}
               <span className="tracking-total-amount">
-                ${(parseFloat(order.grand_total) || 0).toFixed(2)}
+                {formatPrice(order.grand_total, order.currency || "JPY")}
               </span>
             </div>
 
