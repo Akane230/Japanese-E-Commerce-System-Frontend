@@ -249,6 +249,18 @@ function normalizeProduct(prod) {
   p.ingredients = p.ingredients || p.attributes?.ingredients || [];
   p.allergens = p.allergens || p.attributes?.allergens || [];
 
+  // Inventory fields from API detail endpoint
+  p.quantity_available =
+    p.quantity_available !== undefined && p.quantity_available !== null
+      ? p.quantity_available
+      : p.inventory?.quantity_available || 0;
+  p.in_stock =
+    p.in_stock !== undefined && p.in_stock !== null ? p.in_stock : true;
+  p.is_low_stock =
+    p.is_low_stock !== undefined && p.is_low_stock !== null
+      ? p.is_low_stock
+      : false;
+
   return p;
 }
 function normalizeProducts(list) {

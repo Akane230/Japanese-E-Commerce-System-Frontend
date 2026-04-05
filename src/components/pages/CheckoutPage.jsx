@@ -70,56 +70,74 @@ export function CheckoutPage({ onNavigate }) {
     }
   }, [step, paymentMethods.length]);
 
-  const handlePlaceOrder = async () => {
+  const handleContinueToPayment = async () => {
     if (!payment) {
       setError("Please select a payment method.");
       return;
     }
     setError("");
-    try {
-      const created = await createOrderMutation.mutateAsync({
-        shipping_address: {
-          recipient_name: addr.name,
-          street: addr.street,
-          building: addr.building,
-          city: addr.city,
-          postal_code: addr.postal,
-          country: addr.country,
-        },
-        payment_method: payment,
-        shipping_service: shippingMethod,
-        shipping_fee: shippingFee,
-        currency: currency, // Use product's currency
-        customer_notes: paymentNotes || undefined,
-      });
-      setOrder(created);
-      try {
-        setInstructions(
-          await paymentApi.instructions(created.id ?? created.order_id),
-        );
-      } catch {
-        setInstructions(null);
-      }
-      setStep(4);
-    } catch (e) {
-      setError(
-        e?.response?.data?.message ||
-          "Failed to place order. Please try again.",
-      );
+    setStep(4);
+  };
+
+  const createOrderAndFetchInstructions = async () => {
+    if (!payment) {
+      setError("Please select a payment method.");
+      throw new Error("No payment method selected");
     }
+
+    const created = await createOrderMutation.mutateAsync({
+      shipping_address: {
+        recipient_name: addr.name,
+        street: addr.street,
+        building: addr.building,
+        city: addr.city,
+        postal_code: addr.postal,
+        country: addr.country,
+      },
+      payment_method: payment,
+      shipping_service: shippingMethod,
+      shipping_fee: shippingFee,
+      currency: currency, // Use product's currency
+      customer_notes: paymentNotes || undefined,
+    });
+    setOrder(created);
+
+    try {
+      const paymentInstructions = await paymentApi.instructions(
+        created.id ?? created.order_id,
+      );
+      setInstructions(paymentInstructions);
+    } catch {
+      setInstructions(null);
+    }
+
+    return created;
   };
 
   const handleSubmitPayment = async () => {
-    if (!order) {
-      setDone(true);
-      await clearCart();
-      onNavigate("dashboard");
+    // Validate required fields before creating order
+    if (!referenceNumber.trim()) {
+      setError("Please enter a payment reference number.");
       return;
     }
+    if (!proofUrl) {
+      setError("Please upload proof of payment.");
+      return;
+    }
+
+    setError("");
     setSubmittingPayment(true);
+
     try {
+      // Create order first (if not already created)
+      let orderToSubmit = order;
+      if (!orderToSubmit) {
+        orderToSubmit = await createOrderAndFetchInstructions();
+      }
+
+      // Then submit payment proof
       await paymentApi.submit({
-        order_id: order.id ?? order.order_id,
+        order_id: orderToSubmit.id ?? orderToSubmit.order_id,
         reference_number: referenceNumber,
         proof_url: proofUrl,
         notes: paymentNotes || undefined,
@@ -386,7 +404,9 @@ export function CheckoutPage({ onNavigate }) {
               <div>
                 <h3 className="checkout-step-title">Payment Method</h3>
                 {(paymentMethods.length
-                  ? paymentMethods
+                  ? paymentMethods.filter(
+                      (m) => m.code !== "cod" && m.id !== "cod",
+                    )
                   : [
                       { code: "gcash", name: "GCash", icon: "📱" },
                       {
@@ -394,7 +414,6 @@ export function CheckoutPage({ onNavigate }) {
                         name: "Bank Transfer",
                         icon: "🏦",
                       },
-                      { code: "cod", name: "Cash on Delivery", icon: "💴" },
                     ]
                 ).map((opt) => (
                   <button
@@ -439,13 +458,10 @@ export function CheckoutPage({ onNavigate }) {
                     ← Back
                   </button>
                   <button
-                    onClick={handlePlaceOrder}
-                    disabled={createOrderMutation.isPending}
+                    onClick={handleContinueToPayment}
                     className="checkout-primary-btn checkout-primary-btn--flex"
                   >
-                    {createOrderMutation.isPending
-                      ? "Placing Order…"
-                      : "Review & Payment →"}
+                    Continue to Payment →
                   </button>
                 </div>
                 {error && <p className="checkout-error">{error}</p>}
