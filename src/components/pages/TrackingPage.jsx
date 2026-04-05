@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { orderApi } from "../../utils/api";
-import { useAuth } from "../../hooks/useAuth";
 import { formatPrice } from "../../utils/helpers";
+import { OrderProductCard } from "../common/OrderProductCard";
 import "../../styles/pages/TrackingPage.css";
 
 export function TrackingPage({ orderNumber: initialOrderNumber, onNavigate }) {
   const [orderNumber, setOrderNumber] = useState(initialOrderNumber || "");
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [canceling, setCanceling] = useState(false);
+  const [cancelMessage, setCancelMessage] = useState("");
   const [error, setError] = useState("");
-  const { user } = useAuth();
 
   const fetchOrder = async (num) => {
     if (!num?.trim()) return;
@@ -36,6 +37,35 @@ export function TrackingPage({ orderNumber: initialOrderNumber, onNavigate }) {
   }, [initialOrderNumber]);
 
   const handleSearch = () => fetchOrder(orderNumber);
+
+  const canCancel =
+    order &&
+    ![
+      "shipped",
+      "in_transit",
+      "out_for_delivery",
+      "delivered",
+      "refunded",
+      "cancelled",
+    ].includes(order.status);
+
+  const handleCancel = async () => {
+    if (!order?.id) return;
+    setCanceling(true);
+    setCancelMessage("");
+    try {
+      const updated = await orderApi.cancel(order.id, {});
+      setOrder(updated);
+      setCancelMessage("Order cancelled successfully.");
+    } catch (e) {
+      setCancelMessage(
+        e?.response?.data?.message ||
+          "Failed to cancel order. Please try again.",
+      );
+    } finally {
+      setCanceling(false);
+    }
+  };
 
   const isDelivered =
     order && (order.status === "delivered" || order.status === "Delivered");
@@ -120,6 +150,19 @@ export function TrackingPage({ orderNumber: initialOrderNumber, onNavigate }) {
               </span>
             </div>
 
+            {canCancel && (
+              <button
+                onClick={handleCancel}
+                disabled={canceling}
+                className="tracking-cancel-btn"
+              >
+                {canceling ? "Cancelling…" : "Cancel Order"}
+              </button>
+            )}
+            {cancelMessage && (
+              <div className="tracking-cancel-message">{cancelMessage}</div>
+            )}
+
             {order.shipping_address && (
               <div className="tracking-address">
                 <div className="tracking-address-label">📍 Shipping to</div>
@@ -131,6 +174,29 @@ export function TrackingPage({ orderNumber: initialOrderNumber, onNavigate }) {
                   {order.shipping_address.city}{" "}
                   {order.shipping_address.postal_code},{" "}
                   {order.shipping_address.country}
+                </div>
+              </div>
+            )}
+
+            {order.items && order.items.length > 0 && (
+              <div className="tracking-products">
+                <h3 className="tracking-section-title">
+                  Products in this order
+                </h3>
+                <div className="tracking-products-list">
+                  {order.items.map((item) => (
+                    <OrderProductCard
+                      key={item.product_id || item.slug || item.id}
+                      item={item}
+                      onClick={() => {
+                        const productLink =
+                          item.slug || item.product_id || item.id;
+                        if (productLink) {
+                          onNavigate("product", productLink);
+                        }
+                      }}
+                    />
+                  ))}
                 </div>
               </div>
             )}
