@@ -300,6 +300,21 @@
   color: var(--text-primary);
 }
 
+.product-stock {
+  margin-bottom: 20px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.stock-in {
+  color: var(--accent-green);
+}
+
+.stock-out {
+  color: #d45f5f;
+}
+
+
 /* Shipping Notice */
 .shipping-notice {
   display: flex;

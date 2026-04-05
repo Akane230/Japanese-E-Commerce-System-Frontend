@@ -3,7 +3,7 @@ import { productApi } from "../utils/api";
 export const productService = {
   // Fetch products with filters
   async getProducts(params = {}) {
-    return productApi.list(params);
+    return productApi.list({ ...params, in_stock: true });
   },
 
   // Fetch featured products

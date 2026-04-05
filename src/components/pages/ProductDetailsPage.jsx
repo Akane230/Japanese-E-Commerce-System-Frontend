@@ -251,6 +251,17 @@ export const ProductDetailPage = ({ slug, onNavigate, addToCart }) => {
               </div>
             </div>
 
+            {/* Stock Availability */}
+            <div className="product-stock">
+              {product.in_stock ? (
+                <span className="stock-in">
+                  In stock ({product.quantity_available})
+                </span>
+              ) : (
+                <span className="stock-out">Out of stock</span>
+              )}
+            </div>
+
             {/* Shipping Notice */}
             {productShips && (
               <div className="shipping-notice">
